@@ -1,0 +1,16 @@
+<mat-sidenav-container class="sidenav-container">
+    <mat-sidenav mode="side" opened class="sidenav">
+        <h3>Users</h3>
+        <mat-list>
+            <mat-list-item *ngFor="let user of users">
+                <button mat-button class="user-button" (click)="navigate()">
+                <!-- <span class="status-dot" [ngClass]="user.chatViewed"></span> -->
+                {{ user.name | titlecase }}
+                </button>
+            </mat-list-item>
+        </mat-list>
+    </mat-sidenav>
+    <mat-sidenav-content class="sidenav-content">
+        <router-outlet></router-outlet>
+    </mat-sidenav-content>
+</mat-sidenav-container>

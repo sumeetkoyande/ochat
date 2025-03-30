@@ -1,0 +1,54 @@
+<mat-toolbar color="primary" class="navbar">
+    <!-- App title/logo -->
+    <span class="app-title">Octanom Chat</span>
+
+    <!-- Spacer to push user section to the right -->
+    <span class="spacer"></span>
+
+    <!-- User section -->
+    <div class="user-section">
+        <span class="user-name">{{ userName }}</span>
+
+        <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
+            <!-- <mat-icon class="user-avatar" aria-hidden="false" aria-label="User avatar">
+                account_circle
+            </mat-icon> -->
+            <!-- Alternative using initials in a circle -->
+            <div class="initials-avatar">{{ userInitials }}</div>
+        </button>
+
+        <mat-menu #userMenu="matMenu" xPosition="before">
+            <div class="user-menu-header">
+                <div class="user-info">
+                    <div class="user-avatar-large">
+                        <mat-icon>account_circle</mat-icon>
+                        <!-- <div class="initials-avatar large">{{ userInitials }}</div> -->
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">{{ userName }}</div>
+                        <div class="user-email">{{ userEmail }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <mat-divider></mat-divider>
+
+            <button mat-menu-item (click)="onProfile()">
+                <mat-icon>person</mat-icon>
+                <span>My Profile</span>
+            </button>
+
+            <button mat-menu-item (click)="onSettings()">
+                <mat-icon>settings</mat-icon>
+                <span>Settings</span>
+            </button>
+
+            <mat-divider></mat-divider>
+
+            <button mat-menu-item (click)="onLogout()">
+                <mat-icon>exit_to_app</mat-icon>
+                <span>Logout</span>
+            </button>
+        </mat-menu>
+    </div>
+</mat-toolbar>

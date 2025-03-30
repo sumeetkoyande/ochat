@@ -1,0 +1,5 @@
+<ul>
+    @for (item of dataService.users$| async; track item) {
+    <li>{{ item.name }}</li>
+    }
+</ul>

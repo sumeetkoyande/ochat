@@ -1,0 +1,105 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    position: relative;
+    z-index: 2;
+
+    .app-title {
+        font-size: 1.25rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    .spacer {
+        flex: 1 1 auto;
+    }
+
+    .user-section {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .user-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-right: 8px;
+        }
+
+        .user-avatar {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+}
+
+.user-menu-header {
+    padding: 16px;
+    min-width: 200px;
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .user-avatar-large {
+            background-color: rgba(0, 0, 0, 0.1);
+            color: rgba(0, 0, 0, 0.7);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            mat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 40px;
+            }
+        }
+
+        .user-details {
+            .user-name {
+                font-weight: 500;
+                font-size: 0.875rem;
+            }
+
+            .user-email {
+                font-size: 0.75rem;
+                color: rgba(0, 0, 0, 0.6);
+            }
+        }
+    }
+}
+
+.initials-avatar {
+    background-color: #3f51b5;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+
+    &.large {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+    }
+}
+
+/* Adjust menu item icons */
+.mat-menu-item {
+    mat-icon {
+        margin-right: 8px;
+    }
+}

@@ -7,9 +7,9 @@ import { Observable } from 'rxjs';
 })
 export class DataService {
   firestore: Firestore = inject(Firestore);
-  items$: Observable<any[]>;
+  users$: Observable<any[]>;
   constructor() {
     const aCollection = collection(this.firestore, 'users');
-    this.items$ = collectionData(aCollection);
+    this.users$ = collectionData(aCollection);
   }
 }

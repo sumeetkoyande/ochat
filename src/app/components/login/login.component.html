@@ -1,1 +1,59 @@
-<p>login works!</p>
+<div class="login-container">
+    <mat-card class="login-card">
+        <mat-card-header class="login-header">
+            <mat-card-title>
+                <h1 class="mat-display-1">Welcome Back</h1>
+            </mat-card-title>
+            <mat-card-subtitle>
+                <p>Please sign in to continue</p>
+            </mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Email</mat-label>
+                    <input matInput formControlName="email" type="email" placeholder="your@email.com">
+                    <mat-icon matSuffix>mail</mat-icon>
+                    <mat-error NgIf="email?.hasError('required')">
+                        Email is required
+                    </mat-error>
+                    <mat-error NgIf="email?.hasError('email')">
+                        Please enter a valid email
+                    </mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                    <mat-label>Password</mat-label>
+                    <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'"
+                        placeholder="••••••">
+                    <button type="button" mat-icon-button matSuffix (click)="hidePassword = !hidePassword">
+                        <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                    </button>
+                    <mat-error *ngIf="password?.hasError('required')">
+                        Password is required
+                    </mat-error>
+                    <mat-error *ngIf="password?.hasError('minlength')">
+                        Password must be at least 6 characters
+                    </mat-error>
+                </mat-form-field>
+
+                <div class="remember-forgot">
+                    <mat-checkbox formControlName="rememberMe">Remember me</mat-checkbox>
+                    <a mat-button color="primary" routerLink="/forgot-password">Forgot password?</a>
+                </div>
+
+                <button mat-raised-button color="primary" type="submit" class="full-width"
+                    [disabled]="!loginForm.valid || isLoading">
+                    <span NgIf="!isLoading">Sign In</span>
+                    <!-- <mat-spinner NgIf="isLoading" diameter="24"></mat-spinner> -->
+                </button>
+            </form>
+        </mat-card-content>
+
+
+        <mat-card-actions class="login-footer">
+            <p>Don't have an account? <a mat-button color="accent" routerLink="/register">Sign Up</a></p>
+        </mat-card-actions>
+    </mat-card>
+</div>

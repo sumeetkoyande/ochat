@@ -1,14 +1,11 @@
-import { Component, inject } from '@angular/core';
-import { DataService } from '../../services/data.service';
-import { AsyncPipe } from '@angular/common';
+import { Component } from '@angular/core';
+import { SidePanelComponent } from '../side-panel/side-panel.component';
+import { TopNavComponent } from '../top-nav/top-nav.component';
 
 @Component({
   selector: 'app-home',
-  imports: [AsyncPipe],
+  imports: [TopNavComponent, SidePanelComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
-export class HomeComponent {
-  public dataService = inject(DataService);
-  constructor() {}
-}
+export class HomeComponent {}
