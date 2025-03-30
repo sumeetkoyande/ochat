@@ -24,12 +24,12 @@ interface User {
   styleUrl: './side-panel.component.css',
 })
 export class SidePanelComponent implements OnDestroy {
-  // inputs
-  @Input() users: User[] = [];
-
   // services
   dataService = inject(DataService);
   router = inject(Router);
+
+  // inputs
+  @Input() users: User[] = [];
 
   constructor() {
     this.dataService.users$.subscribe((user) => {

@@ -11,8 +11,8 @@ export const routes: Routes = [
     component: HomeComponent,
     canActivate: [authGuard],
     data: { redirectUnauthorizedTo: ['/login'] },
+    children: [{ path: 'dashboard', component: DashboardComponent }],
   },
-  { path: 'dashboard', component: DashboardComponent },
   { path: 'login', component: LoginComponent },
   { path: 'logout', component: LogoutComponent },
 ];

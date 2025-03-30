@@ -35,7 +35,7 @@ export class TopNavComponent {
 
   onLogout(): void {
     // Implement your logout logic here
-    console.log('User logged out');
+    this.auth.logout();
   }
 
   onProfile(): void {

@@ -1,5 +1,6 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, inject, OnDestroy } from '@angular/core';
+import { AuthService } from '../../services/auth.service';
 import { DataService } from '../../services/data.service';
 
 @Component({
@@ -10,6 +11,7 @@ import { DataService } from '../../services/data.service';
 })
 export class DashboardComponent implements OnDestroy {
   public dataService = inject(DataService);
+  public auth = inject(AuthService);
   constructor() {}
   ngOnDestroy(): void {
     this.dataService.users$.subscribe().unsubscribe();

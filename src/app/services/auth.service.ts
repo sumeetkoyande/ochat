@@ -18,15 +18,24 @@ export class AuthService {
   authState$: Observable<User | null>;
   authStateSubscription: Subscription;
   user: User | null = null;
+  userRole: string | null = null;
 
   constructor(private auth: Auth, private router: Router) {
     this.authState$ = authState(this.auth);
     this.authStateSubscription = this.authState$.subscribe(
-      (aUser: User | null) => {
-        this.user = aUser;
+      (firebaseUser: User | null) => {
+        this.user = firebaseUser;
       }
     );
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        const tokenResult = await user.getIdTokenResult(true); // Force refresh
+        const role = tokenResult.claims['role'] || 'user'; // Default to "user"
+        this.userRole = role as string;
+      }
+    });
   }
+
   loginWithEmailAndPassword(email: string, password: string) {
     try {
       setPersistence(this.auth, browserLocalPersistence).then(() => {
