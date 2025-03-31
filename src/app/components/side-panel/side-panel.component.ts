@@ -5,9 +5,10 @@ import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { Router, RouterOutlet } from '@angular/router';
 import { DataService } from '../../services/data.service';
+import { ChatComponent } from '../chat/chat.component';
 
 interface User {
-  name: string;
+  displayName: string;
   chatViewed: boolean;
 }
 
@@ -19,6 +20,7 @@ interface User {
     MatSidenavModule,
     MatListModule,
     MatButtonModule,
+    ChatComponent,
   ],
   templateUrl: './side-panel.component.html',
   styleUrl: './side-panel.component.css',
@@ -39,7 +41,7 @@ export class SidePanelComponent implements OnDestroy {
     });
   }
 
-  navigate() {
+  navigate(user: User) {
     this.router.navigate(['/dashboard']);
   }
 

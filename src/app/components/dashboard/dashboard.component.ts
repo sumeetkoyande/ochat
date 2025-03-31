@@ -1,19 +1,11 @@
-import { AsyncPipe } from '@angular/common';
-import { Component, inject, OnDestroy } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
-import { DataService } from '../../services/data.service';
+import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-dashboard',
-  imports: [AsyncPipe],
+  selector: 'dashboard',
+  imports: [],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
-export class DashboardComponent implements OnDestroy {
-  public dataService = inject(DataService);
-  public auth = inject(AuthService);
+export class DashboardComponent {
   constructor() {}
-  ngOnDestroy(): void {
-    this.dataService.users$.subscribe().unsubscribe();
-  }
 }

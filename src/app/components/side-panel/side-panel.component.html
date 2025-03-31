@@ -3,14 +3,15 @@
         <h3>Users</h3>
             <mat-list>
                 <mat-list-item *ngFor="let user of users">
-                    <button mat-button class="user-button" (click)="navigate()">
+                    <button mat-button class="user-button" (click)="navigate(user)">
                         <span class="status-dot" [ngClass]="[user.chatViewed ? 'online' : 'offline']"></span>
-                        {{ user.name | titlecase }}
+                        {{ user.displayName | titlecase }}
                     </button>
                 </mat-list-item>
             </mat-list>
     </mat-sidenav>
     <mat-sidenav-content class="sidenav-content">
         <router-outlet></router-outlet>
+        <chat></chat>
     </mat-sidenav-content>
 </mat-sidenav-container>

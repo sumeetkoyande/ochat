@@ -1,15 +1,22 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
   Auth,
   authState,
   browserLocalPersistence,
+  createUserWithEmailAndPassword,
   setPersistence,
   signInWithEmailAndPassword,
   signOut,
   User,
 } from '@angular/fire/auth';
+import {
+  doc,
+  Firestore,
+  serverTimestamp,
+  setDoc,
+} from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { Observable, Subscription } from 'rxjs';
+import { catchError, from, Observable, Subscription, switchMap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -19,6 +26,9 @@ export class AuthService {
   authStateSubscription: Subscription;
   user: User | null = null;
   userRole: string | null = null;
+
+  // injectors
+  private firestore: Firestore = inject(Firestore);
 
   constructor(private auth: Auth, private router: Router) {
     this.authState$ = authState(this.auth);
@@ -45,6 +55,37 @@ export class AuthService {
       console.log('unable to login', error);
       throw error;
     }
+  }
+
+  signUp(email: string, password: string, displayName: string) {
+    return from(
+      createUserWithEmailAndPassword(this.auth, email, password)
+    ).pipe(
+      switchMap(({ user }) => {
+        if (!user) {
+          throw new Error('User creation failed');
+        }
+
+        const userDocRef = doc(this.firestore, `users/${user.uid}`);
+        return from(
+          setDoc(userDocRef, {
+            uid: user.uid,
+            email: user.email,
+            displayName: displayName,
+            createdAt: serverTimestamp(), // Better to use server timestamp
+            lastLogin: serverTimestamp(),
+          })
+        );
+      }),
+      catchError((error) => {
+        console.error('Signup error:', error);
+        // Optionally delete the user if Firestore fails
+        if (this.auth.currentUser) {
+          this.auth.currentUser.delete();
+        }
+        throw error; // Re-throw to let caller handle it
+      })
+    );
   }
 
   logout() {

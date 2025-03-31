@@ -1,0 +1,51 @@
+<ng-template #chatComponentTemplate>
+    <mat-card class="chat-window" [class.expanded]="expanded">
+        <mat-card-header (click)="toggleExpand()" class="chat-header">
+            <mat-card-title>{{ userName }}</mat-card-title>
+            <mat-card-subtitle *ngIf="!expanded && unreadCount > 0">
+                {{ unreadCount }} new message{{ unreadCount > 1 ? 's' : '' }}
+            </mat-card-subtitle>
+            <button mat-icon-button class="close-button" (click)="closeChat($event)">
+                <mat-icon>close</mat-icon>
+            </button>
+        </mat-card-header>
+    
+        <mat-card-content *ngIf="expanded" class="chat-content">
+            <div class="messages-container">
+                <mat-list>
+                    <mat-list-item *ngFor="let message of messages"
+                        [class.sent]="message.senderId === userService.currentUser?.uid"
+                        [class.received]="message.senderId !== userService.currentUser?.uid">
+                        <div class="message-bubble">
+                            <p>{{ message.text }}</p>
+                            <span class="timestamp">{{ message.timestamp?.toDate() | date:'shortTime' }}</span>
+                        </div>
+                    </mat-list-item>
+                </mat-list>
+            </div>
+    
+            <div class="message-input">
+                <mat-form-field appearance="outline" class="full-width">
+                    <input matInput [(ngModel)]="newMessage" placeholder="Type a message" (keyup.enter)="sendMessage()">
+                    <button mat-icon-button matSuffix (click)="sendMessage()" [disabled]="!newMessage.trim()">
+                        <mat-icon>send</mat-icon>
+                    </button>
+                </mat-form-field>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</ng-template>
+
+
+<div class="chat-manager-container">
+    <div class="chat-windows-container">
+        @if(auth.userRole === 'admin'){
+            <div *ngFor="let chat of activeChats; trackBy: trackByUserId" [attr.data-user-id]="chat.userId">
+                <ng-template [ngTemplateOutlet]="chatComponentTemplate"></ng-template>
+            </div>
+        } 
+        @else {
+            <ng-template [ngTemplateOutlet]="chatComponentTemplate"></ng-template>
+        }
+    </div>
+</div>

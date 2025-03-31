@@ -1,0 +1,150 @@
+/* Animation keyframes */
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+.signup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.background-art {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://source.unsplash.com/random/1600x900/?abstract') center/cover;
+    opacity: 0.1;
+    z-index: 0;
+}
+
+.signup-card {
+    width: 100%;
+    max-width: 450px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+        0 8px 10px 1px rgba(0, 0, 0, 0.14),
+        0 3px 14px 2px rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.signup-card .card-header {
+    padding: 2rem 2rem 1rem;
+    text-align: center;
+    background: linear-gradient(to right, #3f51b5, #9c27b0);
+    color: white;
+}
+
+.signup-card .card-header .welcome-text {
+    font-size: 2rem;
+    font-weight: 500;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.signup-card .card-header .subtitle {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0;
+}
+
+.signup-card mat-card-content {
+    padding: 2rem;
+}
+
+.signup-card mat-card-content .full-width {
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+.signup-card mat-card-content .full-width mat-icon {
+    color: #3f51b5;
+}
+
+.signup-card mat-card-content .submit-button {
+    width: 100%;
+    padding: 0.8rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.signup-card mat-card-content .submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2),
+        0 4px 5px 0 rgba(0, 0, 0, 0.14),
+        0 1px 10px 0 rgba(0, 0, 0, 0.12);
+}
+
+.signup-card mat-card-content .submit-button:disabled {
+    background-color: #e0e0e0;
+}
+
+.signup-card mat-card-content .divider {
+    margin: 2rem 0;
+    border-top-color: rgba(0, 0, 0, 0.08);
+}
+
+.signup-card mat-card-content .login-redirect {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #757575;
+}
+
+/* Custom snackbar styles */
+.success-snackbar {
+    background: linear-gradient(to right, #4caf50, #009688);
+    color: white;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+.error-snackbar {
+    background: linear-gradient(to right, #f44336, #ff5722);
+    color: white;
+    font-weight: 500;
+    border-radius: 8px;
+}
+
+/* Animation for form elements */
+mat-form-field {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in forwards;
+}
+
+mat-form-field:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+mat-form-field:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+mat-form-field:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.submit-button {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in forwards;
+    animation-delay: 0.4s;
+}

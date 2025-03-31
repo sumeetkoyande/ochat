@@ -15,6 +15,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 // import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -30,6 +31,7 @@ import { AuthService } from '../../services/auth.service';
     MatProgressSpinnerModule,
     MatDividerModule,
     ReactiveFormsModule,
+    RouterLink,
   ],
 
   templateUrl: './login.component.html',
