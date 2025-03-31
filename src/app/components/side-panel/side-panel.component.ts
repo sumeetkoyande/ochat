@@ -6,6 +6,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { Router, RouterOutlet } from '@angular/router';
 import { DataService } from '../../services/data.service';
 import { ChatComponent } from '../chat/chat.component';
+import { AuthService } from '../../services/auth.service';
 
 interface User {
   displayName: string;
@@ -29,6 +30,7 @@ export class SidePanelComponent implements OnDestroy {
   // services
   dataService = inject(DataService);
   router = inject(Router);
+  authService = inject(AuthService);
 
   // inputs
   @Input() users: User[] = [];

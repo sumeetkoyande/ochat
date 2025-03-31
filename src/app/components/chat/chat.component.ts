@@ -1,22 +1,13 @@
-// import { Component } from '@angular/core';
-
-// @Component({
-//   selector: 'app-chat',
-//   imports: [],
-//   templateUrl: './chat.component.html',
-//   styleUrl: './chat.component.css'
-// })
-// export class ChatComponent {
-
-// }
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
+import { map, Observable, switchMap, take } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ChatService } from '../../services/chat.service';
 import { UserService } from '../../services/user.service';
@@ -33,18 +24,22 @@ import { UserService } from '../../services/user.service';
     MatIconModule,
     MatListModule,
     MatInputModule,
+    MatBadgeModule,
     FormsModule,
   ],
 })
 export class ChatComponent implements OnInit {
-  @Input() userId!: string;
-  @Input() userName!: string;
   expanded = false;
-  messages: any[] = [];
   newMessage = '';
-  unreadCount = 0;
+  currentChatId: string | null = null;
 
-  activeChats: { userId: string; userName: string }[] = [];
+  // For admin view
+  userChats$!: Observable<any[]>;
+
+  // For current chat
+  messages$!: Observable<any[]>;
+  unreadCount$!: Observable<number>;
+  chatPartnerName$!: Observable<string>;
 
   public auth = inject(AuthService);
 
@@ -53,64 +48,85 @@ export class ChatComponent implements OnInit {
     public userService: UserService
   ) {}
 
-  ngOnInit(): void {
-    this.chatService.getActiveChats$().subscribe((chatIds) => {
-      this.activeChats = chatIds.map((id) => ({
-        userId: id,
-        userName:
-          this.userService.getUserName(id) || `User ${id.substring(0, 6)}`,
-      }));
-    });
+  async ngOnInit(): Promise<void> {
+    if (this.auth.userRole === 'admin') {
+      // Admin sees all active chats
+      this.userChats$ = this.chatService.getAllUserChats().pipe(
+        map((chats) =>
+          chats.map((chat) => ({
+            ...chat,
+            partner: chat.participants.find(
+              (id) => id !== this.userService.currentUser?.uid
+            ),
+          }))
+        )
+      );
+    } else {
+      // Regular user gets or creates their support chat
+      this.currentChatId = await this.chatService.getOrCreateSupportChat();
+      this.loadChat(this.currentChatId);
+    }
+  }
 
-    this.chatService.getMessages(this.userId).subscribe((messages) => {
-      this.messages = messages;
-      this.updateUnreadCount();
-    });
+  loadChat(chatId: string): void {
+    this.currentChatId = chatId;
+    this.messages$ = this.chatService.getMessages(chatId);
+
+    // Get unread count
+    // this.unreadCount$ = this.chatService.getUnreadCount(chatId);
+
+    // Get chat partner name (for admin)
+    if (this.auth.userRole === 'admin') {
+      this.chatPartnerName$ = this.messages$.pipe(
+        switchMap((messages) => {
+          const partnerId = messages.find(
+            (m) => m.senderId !== this.userService.currentUser?.uid
+          )?.senderId;
+          return this.userService.getUserName(partnerId || '');
+        })
+      );
+    }
   }
 
   toggleExpand(): void {
     this.expanded = !this.expanded;
-    if (this.expanded) {
+    if (this.expanded && this.currentChatId) {
       this.markMessagesAsRead();
     }
   }
 
-  sendMessage(): void {
-    if (this.newMessage.trim()) {
-      this.chatService.sendMessage(this.userId, this.newMessage).then(() => {
-        this.newMessage = '';
-      });
+  async sendMessage(): Promise<void> {
+    if (this.newMessage.trim() && this.currentChatId) {
+      await this.chatService.sendMessage(this.currentChatId, this.newMessage);
+      this.newMessage = '';
     }
   }
 
-  private updateUnreadCount(): void {
-    this.unreadCount = this.messages.filter(
-      (m) => !m.read && m.senderId !== this.userService.currentUser?.uid
-    ).length;
-  }
+  private async markMessagesAsRead(): Promise<void> {
+    if (!this.currentChatId) return;
 
-  private markMessagesAsRead(): void {
-    const unreadIds = this.messages
-      .filter(
-        (m) => !m.read && m.senderId !== this.userService.currentUser?.uid
-      )
-      .map((m) => m.id);
+    // Get unread messages
+    const messages = await this.messages$.pipe(take(1)).toPromise();
+    const unreadIds =
+      messages
+        ?.filter(
+          (m) => !m.read && m.senderId !== this.userService.currentUser?.uid
+        )
+        .map((m) => m.id) || [];
 
     if (unreadIds.length) {
-      this.chatService.markAsRead(this.userId, unreadIds);
-      this.unreadCount = 0;
+      await this.chatService.markMessagesAsRead(this.currentChatId, unreadIds);
     }
   }
 
-  closeChat(e: Event): void {
-    console.log(e);
-    this.chatService.closeChat(this.userId);
+  async closeChat(): Promise<void> {
+    if (this.currentChatId) {
+      await this.chatService.closeChat(this.currentChatId);
+      this.currentChatId = null;
+    }
   }
 
-  trackByUserId(
-    index: number,
-    chat: { userId: string; userName: string }
-  ): string {
-    return chat.userId;
+  trackByChatId(index: number, chat: any): string {
+    return chat.id;
   }
 }

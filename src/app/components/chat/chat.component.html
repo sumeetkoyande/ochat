@@ -1,29 +1,45 @@
-<ng-template #chatComponentTemplate>
+<ng-template #chatWindowTemplate let-chat="chat">
     <mat-card class="chat-window" [class.expanded]="expanded">
         <mat-card-header (click)="toggleExpand()" class="chat-header">
-            <mat-card-title>{{ userName }}</mat-card-title>
-            <mat-card-subtitle *ngIf="!expanded && unreadCount > 0">
+            <mat-card-title>
+                @if(auth.userRole === 'admin') {
+                {{ userService.getUserName(chat.partner) || 'Support User' }}
+                } @else {
+                Support Team
+                }
+            </mat-card-title>
+
+            <mat-card-subtitle *ngIf="!expanded && (unreadCount$ | async) as unreadCount" [matBadge]="unreadCount"
+                matBadgeOverlap="false">
+                @if(unreadCount > 0) {
                 {{ unreadCount }} new message{{ unreadCount > 1 ? 's' : '' }}
+                }
             </mat-card-subtitle>
-            <button mat-icon-button class="close-button" (click)="closeChat($event)">
+
+            <button mat-icon-button class="close-button" (click)="closeChat()">
                 <mat-icon>close</mat-icon>
             </button>
         </mat-card-header>
-    
+
         <mat-card-content *ngIf="expanded" class="chat-content">
             <div class="messages-container">
                 <mat-list>
-                    <mat-list-item *ngFor="let message of messages"
-                        [class.sent]="message.senderId === userService.currentUser?.uid"
+                    @for (message of (messages$ | async); track message.id) {
+                    <mat-list-item [class.sent]="message.senderId === userService.currentUser?.uid"
                         [class.received]="message.senderId !== userService.currentUser?.uid">
                         <div class="message-bubble">
                             <p>{{ message.text }}</p>
                             <span class="timestamp">{{ message.timestamp?.toDate() | date:'shortTime' }}</span>
+                            <span class="sender-name">
+                                {{ message.senderId === userService.currentUser?.uid ? 'You' : (message.senderName ||
+                                'Support') }}
+                            </span>
                         </div>
                     </mat-list-item>
+                    }
                 </mat-list>
             </div>
-    
+
             <div class="message-input">
                 <mat-form-field appearance="outline" class="full-width">
                     <input matInput [(ngModel)]="newMessage" placeholder="Type a message" (keyup.enter)="sendMessage()">
@@ -36,16 +52,20 @@
     </mat-card>
 </ng-template>
 
-
 <div class="chat-manager-container">
     <div class="chat-windows-container">
-        @if(auth.userRole === 'admin'){
-            <div *ngFor="let chat of activeChats; trackBy: trackByUserId" [attr.data-user-id]="chat.userId">
-                <ng-template [ngTemplateOutlet]="chatComponentTemplate"></ng-template>
-            </div>
-        } 
-        @else {
-            <ng-template [ngTemplateOutlet]="chatComponentTemplate"></ng-template>
+        @if(auth.userRole === 'admin') {
+        <!-- Admin view - shows all active chats -->
+        @for (chat of (userChats$ | async); track chat.id) {
+        <div (click)="loadChat(chat.id)" [class.active]="currentChatId === chat.id">
+            <ng-template [ngTemplateOutlet]="chatWindowTemplate" [ngTemplateOutletContext]="{chat: chat}"></ng-template>
+        </div>
+        }
+        } @else {
+        <!-- User view - shows only their chat -->
+        @if(currentChatId) {
+        <ng-template [ngTemplateOutlet]="chatWindowTemplate" [ngTemplateOutletContext]="{chat: {}}"></ng-template>
+        }
         }
     </div>
 </div>

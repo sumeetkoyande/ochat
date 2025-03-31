@@ -1,14 +1,20 @@
 <mat-sidenav-container class="sidenav-container">
     <mat-sidenav mode="side" opened class="sidenav">
         <h3>Users</h3>
-            <mat-list>
-                <mat-list-item *ngFor="let user of users">
-                    <button mat-button class="user-button" (click)="navigate(user)">
-                        <span class="status-dot" [ngClass]="[user.chatViewed ? 'online' : 'offline']"></span>
-                        {{ user.displayName | titlecase }}
-                    </button>
-                </mat-list-item>
-            </mat-list>
+            @if (authService.userRole === 'admin') {
+                <mat-list>
+                    <mat-list-item *ngFor="let user of users">
+                        <button mat-button class="user-button" (click)="navigate(user)">
+                            <span class="status-dot" [ngClass]="[user.chatViewed ? 'online' : 'offline']"></span>
+                            {{ user.displayName | titlecase }}
+                        </button>
+                    </mat-list-item>
+                </mat-list>
+            }
+            @else {
+                <p>This section in only for admin user</p>
+                <p>admin can see all the active chats here</p>
+            }
     </mat-sidenav>
     <mat-sidenav-content class="sidenav-content">
         <router-outlet></router-outlet>
