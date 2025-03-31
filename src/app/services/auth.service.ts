@@ -36,17 +36,14 @@ export class AuthService {
     });
   }
 
-  loginWithEmailAndPassword(email: string, password: string) {
+  async loginWithEmailAndPassword(email: string, password: string) {
     try {
-      setPersistence(this.auth, browserLocalPersistence).then(() => {
-        return signInWithEmailAndPassword(this.auth, email, password).then(
-          () => {
-            this.router.navigate(['/']);
-          }
-        );
-      });
+      await setPersistence(this.auth, browserLocalPersistence);
+      await signInWithEmailAndPassword(this.auth, email, password);
+      this.router.navigate(['/']);
     } catch (error) {
       console.log('unable to login', error);
+      throw error;
     }
   }
 
