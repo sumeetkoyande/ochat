@@ -1,13 +1,16 @@
 <!-- Chat Window Template -->
-<ng-template #chatWindowTemplate>
+<ng-template #chatWindowTemplate >
     <mat-card class="chat-window" [class.expanded]="expanded">
         <mat-card-header (click)="toggleExpand()" class="chat-header">
-            <mat-card-title>
+            <!-- <mat-card-title>
                 @if(auth.userRole === 'admin' && (chatPartnerName$ | async); as partnerName) {
                 {{ partnerName }}
                 } @else {
                 {{ auth.userRole === 'admin' ? 'User' : 'Support Team' }}
                 }
+            </mat-card-title> -->
+            <mat-card-title>
+                {{ auth.userRole === 'admin' ? this.openChat?.startedBy : 'Support Team' }}
             </mat-card-title>
 
             <mat-card-subtitle *ngIf="!expanded && (unreadCount$ | async) as unreadCount" [matBadge]="unreadCount"
@@ -58,10 +61,13 @@
     <div class="chat-windows-container">
         @if(auth.userRole === 'admin') {
             <!-- Admin view - shows all chats -->
-            @for (chat of (userChats$ | async); track chat.id) {
+            <!-- @for (chat of (userChats$ | async); track chat.id) {
             <div (click)="loadChat(chat.id)" [class.active-chat]="currentChatId === chat.id">
                 <ng-template [ngTemplateOutlet]="chatWindowTemplate"></ng-template>
             </div>
+            } -->
+            @if (selectedChat) {
+                <ng-template [ngTemplateOutlet]="chatWindowTemplate"></ng-template>
             }
         } @else {
             <!-- User view - shows only their chat -->

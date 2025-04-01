@@ -18,7 +18,7 @@
     </mat-sidenav>
     <mat-sidenav-content class="sidenav-content">
         <router-outlet></router-outlet>
-        <chat></chat>
+        <chat [openChat]="selectedChat"></chat>
         <button mat-button (click)="testFunction()" >Test button</button>
     </mat-sidenav-content>
 </mat-sidenav-container>

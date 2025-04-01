@@ -1,5 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnChanges,
+  OnInit,
+  SimpleChanges,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
@@ -17,7 +23,7 @@ import {
   take,
 } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { ChatService } from '../../services/chat.service';
+import { Chat, ChatService } from '../../services/chat.service';
 import { UserService } from '../../services/user.service';
 
 @Component({
@@ -36,7 +42,7 @@ import { UserService } from '../../services/user.service';
     FormsModule,
   ],
 })
-export class ChatComponent implements OnInit {
+export class ChatComponent implements OnInit, OnChanges {
   expanded = false;
   newMessage = '';
   currentChatId: string | null = null;
@@ -49,6 +55,10 @@ export class ChatComponent implements OnInit {
   messages$!: Observable<any[]>;
   unreadCount$!: Observable<number>;
   chatPartnerName$!: Observable<string>;
+
+  @Input() openChat: Chat | null = null;
+
+  userNames: string[] = ['user 1', 'user 2'];
 
   constructor(
     public auth: AuthService,
@@ -69,11 +79,17 @@ export class ChatComponent implements OnInit {
           }))
         )
       );
+      if (this.openChat) this.loadChat(this.openChat?.id);
     } else {
       // Regular user gets or creates their support chat
       this.currentChatId = await this.chatService.getOrCreateSupportChat();
       this.loadChat(this.currentChatId);
     }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    const { openChat } = changes;
+    this.loadChat(openChat.currentValue.id);
   }
 
   loadChat(chatId: string): void {
@@ -91,7 +107,8 @@ export class ChatComponent implements OnInit {
 
       this.chatPartnerName$ = this.selectedChat.pipe(
         switchMap(
-          (chat) => this.userService.getUserName('') || of('Support User')
+          (chat: Chat) =>
+            this.userService.getUserName(chat.startedBy) || of('Support User')
         )
       );
     }
