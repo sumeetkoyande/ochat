@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Auth } from '@angular/fire/auth';
+import { Auth, user } from '@angular/fire/auth';
 import {
   Firestore,
   addDoc,
@@ -17,7 +17,7 @@ import {
   where,
   writeBatch,
 } from '@angular/fire/firestore';
-import { BehaviorSubject, Observable, map } from 'rxjs';
+import { BehaviorSubject, Observable, map, of, switchMap } from 'rxjs';
 
 export interface Chat {
   id: string;
@@ -257,18 +257,38 @@ export class ChatService {
   }
 
   // Get unread message count for a chat
-  async getUnreadCount(chatId: string): Promise<number> {
-    if (!this.currentUserId) return 0;
+  // async getUnreadCount(chatId: string): Promise<number> {
+  //   if (!this.currentUserId) return 0;
 
-    const messagesRef = collection(this.firestore, `chats/${chatId}/messages`);
-    const q = query(
-      messagesRef,
-      where('read', '==', false),
-      where('senderId', '!=', this.currentUserId)
+  //   const messagesRef = collection(this.firestore, `chats/${chatId}/messages`);
+  //   const q = query(
+  //     messagesRef,
+  //     where('read', '==', false),
+  //     where('senderId', '!=', this.currentUserId)
+  //   );
+
+  //   const snapshot = await getDocs(q);
+  //   return snapshot.size;
+  // }
+
+  getUnreadCount(chatId: string): Observable<number> {
+    return user(this.auth).pipe(
+      switchMap((user) => {
+        if (!user?.uid) return of(0);
+
+        const messagesRef = collection(
+          this.firestore,
+          `chats/${chatId}/messages`
+        );
+        const q = query(
+          messagesRef,
+          where('read', '==', false),
+          where('senderId', '!=', user.uid)
+        );
+
+        return collectionData(q).pipe(map((messages) => messages.length));
+      })
     );
-
-    const snapshot = await getDocs(q);
-    return snapshot.size;
   }
 
   // Get the most recent message in a chat
@@ -284,21 +304,6 @@ export class ChatService {
       ...snapshot.docs[0].data(),
     } as Message;
   }
-
-  // Get a single chat by ID
-  // async getChatById(chatId: string): Promise<Chat | null> {
-  //   const chatRef = doc(this.firestore, `chats/${chatId}`);
-  //   const chatDoc = await getDocs(
-  //     query(collection(this.firestore, 'chats'), where('id', '==', chatId))
-  //   );
-
-  //   if (chatDoc.empty) return null;
-
-  //   return {
-  //     id: chatDoc.docs[0].id,
-  //     ...chatDoc.docs[0].data(),
-  //   } as Chat;
-  // }
 
   // get a single chat by ID
   getChatById(chatId: string): Observable<Chat | null> {

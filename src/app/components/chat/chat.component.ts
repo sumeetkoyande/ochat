@@ -73,7 +73,7 @@ export class ChatComponent implements OnInit {
     this.messages$ = this.chatService.getMessages(chatId);
 
     // Get unread count
-    // this.unreadCount$ = this.chatService.getUnreadCount(chatId);
+    this.unreadCount$ = this.chatService.getUnreadCount(chatId);
 
     // Get chat partner name (for admin)
     if (this.auth.userRole === 'admin') {

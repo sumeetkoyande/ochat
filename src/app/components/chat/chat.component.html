@@ -64,10 +64,10 @@
             </div>
             }
         } @else {
-        <!-- User view - shows only their chat -->
-        @if(currentChatId) {
-        <ng-template [ngTemplateOutlet]="chatWindowTemplate"></ng-template>
-        }
+            <!-- User view - shows only their chat -->
+            @if(currentChatId) {
+                <ng-template [ngTemplateOutlet]="chatWindowTemplate"></ng-template>
+            }
         }
     </div>
 </div>
