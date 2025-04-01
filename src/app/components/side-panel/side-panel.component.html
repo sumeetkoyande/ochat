@@ -18,7 +18,14 @@
     </mat-sidenav>
     <mat-sidenav-content class="sidenav-content">
         <router-outlet></router-outlet>
-        <chat [openChat]="selectedChat"></chat>
+        @if (authService.userRole === 'admin') {
+            @for (selectedChat of selectedChats; track selectedChat.id) {
+            <chat [openChat]="selectedChat" [allOpenChat]="selectedChats"></chat>
+            }
+        } @else {
+            <chat></chat>
+        }
+        
         <button mat-button (click)="testFunction()" >Test button</button>
     </mat-sidenav-content>
 </mat-sidenav-container>

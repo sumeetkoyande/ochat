@@ -1,10 +1,26 @@
+.chat-manager-container {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    z-index: 1000;
+}
+
+.chat-windows-container {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-end;
+    padding: 20px;
+    gap: 20px;
+    max-width: 100vw;
+    overflow-x: auto;
+}
+
 .chat-window {
     width: 300px;
     height: 60px;
     position: relative;
     transition: all 0.3s ease;
     overflow: hidden;
-    margin-left: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     z-index: 1000;
 
@@ -41,7 +57,7 @@
         mat-card-subtitle {
             color: rgba(255, 255, 255, 0.8);
             font-size: 12px;
-            margin-top: 4px;
+            margin-top: -2px;
             display: flex;
             align-items: center;
 
@@ -139,23 +155,12 @@
     }
 }
 
-.chat-manager-container {
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    z-index: 1000;
+.chat-window:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
 }
 
-.chat-windows-container {
-    display: flex;
-    flex-direction: row-reverse;
-    align-items: flex-end;
-    padding: 20px;
-    gap: 20px;
-    max-width: 100vw;
-    overflow-x: auto;
-}
-
+/* Active chat indicator */
 .active-chat {
     box-shadow: 0 0 0 2px #3f51b5;
     border-radius: 4px;
@@ -163,18 +168,17 @@
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
+    .chat-windows-container {
+        padding: 10px;
+        gap: 10px;
+    }
+
     .chat-window {
         width: 280px;
-        margin-left: 10px;
 
         &.expanded {
             height: 70vh;
         }
-    }
-
-    .chat-windows-container {
-        padding: 10px;
-        gap: 10px;
     }
 }
 

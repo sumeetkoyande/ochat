@@ -1,16 +1,9 @@
-<!-- Chat Window Template -->
-<ng-template #chatWindowTemplate >
+<!-- Chat Window Template for Regular Users -->
+<ng-template #chatWindowTemplate>
     <mat-card class="chat-window" [class.expanded]="expanded">
         <mat-card-header (click)="toggleExpand()" class="chat-header">
-            <!-- <mat-card-title>
-                @if(auth.userRole === 'admin' && (chatPartnerName$ | async); as partnerName) {
-                {{ partnerName }}
-                } @else {
-                {{ auth.userRole === 'admin' ? 'User' : 'Support Team' }}
-                }
-            </mat-card-title> -->
             <mat-card-title>
-                {{ auth.userRole === 'admin' ? this.openChat?.startedBy : 'Support Team' }}
+                {{ auth.userRole === 'admin' ? (openChat?.startedBy || 'User') : 'Support Team' }}
             </mat-card-title>
 
             <mat-card-subtitle *ngIf="!expanded && (unreadCount$ | async) as unreadCount" [matBadge]="unreadCount"
@@ -60,20 +53,65 @@
 <div class="chat-manager-container">
     <div class="chat-windows-container">
         @if(auth.userRole === 'admin') {
-            <!-- Admin view - shows all chats -->
-            <!-- @for (chat of (userChats$ | async); track chat.id) {
-            <div (click)="loadChat(chat.id)" [class.active-chat]="currentChatId === chat.id">
-                <ng-template [ngTemplateOutlet]="chatWindowTemplate"></ng-template>
-            </div>
-            } -->
-            @if (selectedChat) {
-                <ng-template [ngTemplateOutlet]="chatWindowTemplate"></ng-template>
-            }
+        <!-- Admin view - shows multiple chat windows -->
+        @for (chat of allOpenChat; track chat.id) {
+        <div class="chat-window-wrapper">
+            <mat-card class="chat-window" [class.expanded]="expandedChats[chat.id]">
+                <mat-card-header (click)="toggleExpand(chat.id)" class="chat-header">
+                    <mat-card-title>
+                        {{ chat.startedBy || 'Support Team' }}
+                    </mat-card-title>
+
+                    <mat-card-subtitle *ngIf="!expandedChats[chat.id] && (unreadCounts[chat.id] | async) as unreadCount"
+                        [matBadge]="unreadCount" matBadgeOverlap="false">
+                        @if(unreadCount > 0) {
+                        {{ unreadCount }} new message{{ unreadCount > 1 ? 's' : '' }}
+                        }
+                    </mat-card-subtitle>
+
+                    <button mat-icon-button class="close-button" (click)="closeChat(chat.id)">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                </mat-card-header>
+
+                <mat-card-content *ngIf="expandedChats[chat.id]" class="chat-content">
+                    <div class="messages-container">
+                        <mat-list>
+                            @for (message of (messages[chat.id] | async); track message.id) {
+                            <mat-list-item [class.sent]="message.senderId === userService.currentUser?.uid"
+                                [class.received]="message.senderId !== userService.currentUser?.uid">
+                                <div class="message-bubble">
+                                    <p>{{ message.text }}</p>
+                                    <span class="timestamp">{{ message.timestamp?.toDate() | date:'shortTime' }}</span>
+                                    <span class="sender-name">
+                                        {{ message.senderId === userService.currentUser?.uid ? 'You' :
+                                        (message.senderName || 'Support') }}
+                                    </span>
+                                </div>
+                            </mat-list-item>
+                            }
+                        </mat-list>
+                    </div>
+
+                    <div class="message-input">
+                        <mat-form-field appearance="outline" class="full-width">
+                            <input matInput [(ngModel)]="newMessages[chat.id]" placeholder="Type a message"
+                                (keyup.enter)="sendMessage(chat.id)">
+                            <button mat-icon-button matSuffix (click)="sendMessage(chat.id)"
+                                [disabled]="!newMessages[chat.id].trim()">
+                                <mat-icon>send</mat-icon>
+                            </button>
+                        </mat-form-field>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+        }
         } @else {
-            <!-- User view - shows only their chat -->
-            @if(currentChatId) {
-                <ng-template [ngTemplateOutlet]="chatWindowTemplate"></ng-template>
-            }
+        <!-- Regular user view - shows single chat using the template -->
+        @if(currentChatId) {
+        <ng-container *ngTemplateOutlet="chatWindowTemplate"></ng-container>
+        }
         }
     </div>
 </div>

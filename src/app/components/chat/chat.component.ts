@@ -43,22 +43,25 @@ import { UserService } from '../../services/user.service';
   ],
 })
 export class ChatComponent implements OnInit, OnChanges {
+  // For admin view
+  userChats$!: Observable<Chat[]>;
+
+  // For single chat view (regular users)
+  currentChatId: string | null = null;
   expanded = false;
   newMessage = '';
-  currentChatId: string | null = null;
-
-  // For admin view
-  userChats$!: Observable<any[]>;
-  selectedChat: any = null;
-
-  // For current chat
   messages$!: Observable<any[]>;
   unreadCount$!: Observable<number>;
   chatPartnerName$!: Observable<string>;
 
-  @Input() openChat: Chat | null = null;
+  // For multiple chat management (admin)
+  expandedChats: { [chatId: string]: boolean } = {};
+  messages: { [chatId: string]: Observable<any[]> } = {};
+  unreadCounts: { [chatId: string]: Observable<number> } = {};
+  newMessages: { [chatId: string]: string } = {};
 
-  userNames: string[] = ['user 1', 'user 2'];
+  @Input() openChat: Chat | null = null;
+  @Input() allOpenChat: Chat[] = [];
 
   constructor(
     public auth: AuthService,
@@ -68,7 +71,6 @@ export class ChatComponent implements OnInit, OnChanges {
 
   async ngOnInit(): Promise<void> {
     if (this.auth.userRole === 'admin') {
-      // Admin sees all active chats
       this.userChats$ = this.chatService.getAllUserChats().pipe(
         map((chats) =>
           chats.map((chat) => ({
@@ -79,63 +81,98 @@ export class ChatComponent implements OnInit, OnChanges {
           }))
         )
       );
-      if (this.openChat) this.loadChat(this.openChat?.id);
+
+      // Load any initially passed chats
+      if (this.openChat) {
+        this.loadChat(this.openChat.id);
+      }
     } else {
       // Regular user gets or creates their support chat
       this.currentChatId = await this.chatService.getOrCreateSupportChat();
-      this.loadChat(this.currentChatId);
+      this.loadSingleChat(this.currentChatId);
+      // await this.initializeUserChat();
+    }
+  }
+
+  private async initializeUserChat(): Promise<void> {
+    try {
+      this.currentChatId = await this.chatService.getOrCreateSupportChat();
+      this.loadSingleChat(this.currentChatId);
+    } catch (error) {
+      console.error('Failed to initialize chat:', error);
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    const { openChat } = changes;
-    this.loadChat(openChat.currentValue.id);
+    if (changes['allOpenChat'] && this.auth.userRole === 'admin') {
+      // Initialize or update all chat windows
+      this.allOpenChat.forEach((chat) => {
+        if (!this.messages[chat.id]) {
+          this.loadChat(chat.id);
+        }
+      });
+    }
   }
 
+  // For admin - load multiple chats
   loadChat(chatId: string): void {
+    this.messages[chatId] = this.chatService.getMessages(chatId);
+    this.unreadCounts[chatId] = this.chatService.getUnreadCount(chatId);
+    this.newMessages[chatId] = '';
+    this.expandedChats[chatId] = true;
+  }
+
+  // For regular users - load single chat
+  loadSingleChat(chatId: string): void {
     this.currentChatId = chatId;
     this.messages$ = this.chatService.getMessages(chatId);
-
-    // Get unread count
     this.unreadCount$ = this.chatService.getUnreadCount(chatId);
 
-    // Get chat partner name (for admin)
-    if (this.auth.userRole === 'admin') {
-      this.selectedChat = this.userChats$.pipe(
-        map((chats) => chats.find((chat) => chat.id === chatId))
-      );
+    // this.chatPartnerName$ =
+    //   this.userService.getUserName('support') || of('Support Team');
+  }
 
-      this.chatPartnerName$ = this.selectedChat.pipe(
-        switchMap(
-          (chat: Chat) =>
-            this.userService.getUserName(chat.startedBy) || of('Support User')
-        )
-      );
+  toggleExpand(chatId?: string): void {
+    if (this.auth.userRole === 'admin' && chatId) {
+      this.expandedChats[chatId] = !this.expandedChats[chatId];
+      if (this.expandedChats[chatId]) {
+        this.markMessagesAsRead(chatId).subscribe();
+      }
+    } else {
+      this.expanded = !this.expanded;
+      if (this.expanded && this.currentChatId) {
+        this.markMessagesAsRead(this.currentChatId).subscribe();
+      }
     }
   }
 
-  toggleExpand(): void {
-    this.expanded = !this.expanded;
-    if (this.expanded && this.currentChatId) {
-      this.markMessagesAsRead();
+  async sendMessage(chatId?: string): Promise<void> {
+    const targetChatId = chatId || this.currentChatId;
+    if (!targetChatId) return;
+
+    const message = chatId
+      ? this.newMessages[chatId]?.trim()
+      : this.newMessage?.trim();
+
+    if (message) {
+      await this.chatService.sendMessage(targetChatId, message);
+
+      if (chatId) {
+        this.newMessages[chatId] = '';
+      } else {
+        this.newMessage = '';
+      }
     }
   }
 
-  async sendMessage(): Promise<void> {
-    if (this.newMessage.trim() && this.currentChatId) {
-      await this.chatService.sendMessage(this.currentChatId, this.newMessage);
-      this.newMessage = '';
-    }
-  }
+  private markMessagesAsRead(chatId: string): Observable<void> {
+    const messages$ =
+      this.auth.userRole === 'admin'
+        ? this.messages[chatId].pipe(take(1))
+        : this.messages$.pipe(take(1));
 
-  private markMessagesAsRead(): Observable<void> {
-    return combineLatest([
-      of(this.currentChatId),
-      this.messages$.pipe(take(1)),
-    ]).pipe(
-      switchMap(([chatId, messages]) => {
-        if (!chatId) return of(undefined);
-
+    return combineLatest([of(chatId), messages$]).pipe(
+      switchMap(([id, messages]) => {
         const unreadIds = messages
           .filter(
             (m) => !m.read && m.senderId !== this.userService.currentUser?.uid
@@ -143,21 +180,26 @@ export class ChatComponent implements OnInit, OnChanges {
           .map((m) => m.id);
 
         return unreadIds.length > 0
-          ? from(this.chatService.markMessagesAsRead(chatId, unreadIds))
+          ? from(this.chatService.markMessagesAsRead(id, unreadIds))
           : of(undefined);
       })
     );
   }
 
-  async closeChat(): Promise<void> {
-    if (this.currentChatId) {
-      await this.chatService.closeChat(this.currentChatId);
-      this.currentChatId = null;
-      this.selectedChat = null;
-    }
-  }
+  async closeChat(chatId?: string): Promise<void> {
+    const targetChatId = chatId || this.currentChatId;
+    if (!targetChatId) return;
 
-  trackByChatId(index: number, chat: any): string {
-    return chat.id;
+    await this.chatService.closeChat(targetChatId);
+
+    if (this.auth.userRole === 'admin' && chatId) {
+      // Remove from local state
+      delete this.messages[chatId];
+      delete this.unreadCounts[chatId];
+      delete this.newMessages[chatId];
+      delete this.expandedChats[chatId];
+    } else {
+      this.currentChatId = null;
+    }
   }
 }

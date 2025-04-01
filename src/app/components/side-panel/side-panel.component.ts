@@ -36,7 +36,7 @@ export class SidePanelComponent implements OnInit, OnDestroy {
 
   // inputs
   @Input() users: User[] = [];
-  selectedChat: Chat | null = null;
+  selectedChats: Chat[] = [];
   activeChats: Chat[] | null = null;
 
   constructor() {
@@ -60,13 +60,23 @@ export class SidePanelComponent implements OnInit, OnDestroy {
 
   openChat(chatId: string) {
     console.log(chatId);
-    this.chatService
-      .getChatById(chatId)
-      .subscribe((chat) => (this.selectedChat = chat));
+    // this.chatService
+    //   .getChatById(chatId)
+    //   .subscribe((chat) => (this.selectedChats = chat));
+    this.chatService.getChatById(chatId).subscribe((chat) => {
+      if (!chat) return;
+
+      // Check if the chat already exists in selectedChat
+      const exists = this.selectedChats.some((s) => s.id === chat.id);
+
+      if (!exists) {
+        this.selectedChats.push(chat);
+      }
+    });
   }
 
   testFunction() {
-    console.log(this.selectedChat);
+    console.log(this.selectedChats);
   }
 
   ngOnDestroy(): void {
