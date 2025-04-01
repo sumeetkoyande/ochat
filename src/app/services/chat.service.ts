@@ -6,34 +6,23 @@ import {
   collection,
   collectionData,
   doc,
+  docData,
+  getDocs,
+  limit,
   orderBy,
   query,
-  where,
-  or,
-  and,
-  getDocs,
-  setDoc,
-  updateDoc,
   serverTimestamp,
-  writeBatch,
-  limit,
   startAfter,
-  DocumentData,
+  updateDoc,
+  where,
+  writeBatch,
 } from '@angular/fire/firestore';
-import {
-  BehaviorSubject,
-  Observable,
-  combineLatest,
-  map,
-  switchMap,
-  take,
-  from,
-  of,
-} from 'rxjs';
+import { BehaviorSubject, Observable, map } from 'rxjs';
 
-interface Chat {
+export interface Chat {
   id: string;
   participants: string[];
+  startedBy: string;
   createdAt: Date;
   status: 'active' | 'awaiting' | 'closed';
   lastMessage?: {
@@ -44,7 +33,7 @@ interface Chat {
   closedAt?: Date;
 }
 
-interface Message {
+export interface Message {
   id?: string;
   text: string;
   senderId: string;
@@ -57,7 +46,7 @@ interface Message {
   providedIn: 'root',
 })
 export class ChatService {
-  private activeChats = new BehaviorSubject<string[]>([]);
+  private activeChats = new BehaviorSubject<Chat[]>([]);
   private currentUserId: string | null = null;
   private readonly MESSAGE_LIMIT = 50;
 
@@ -65,6 +54,46 @@ export class ChatService {
     this.auth.onAuthStateChanged((user) => {
       this.currentUserId = user?.uid || null;
     });
+  }
+
+  // Get observable of active chats
+  // getActiveChats$(): Observable<Chat[]> {
+  //   return this.activeChats.asObservable();
+  // }
+
+  // Load all active chats (for admin)
+  private async loadActiveChats(): Promise<void> {
+    const chatsRef = collection(this.firestore, 'chats');
+    const q = query(
+      chatsRef,
+      where('status', 'in', ['active', 'awaiting']),
+      orderBy('createdAt', 'desc')
+    );
+
+    const querySnapshot = await getDocs(q);
+    const chats = querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Chat[];
+
+    this.activeChats.next(chats);
+  }
+
+  // Get active chats for admin
+  getAdminActiveChats(): Observable<Chat[]> {
+    const chatsRef = collection(this.firestore, 'chats');
+    const q = query(
+      chatsRef,
+      where('status', 'in', ['active', 'awaiting']),
+      orderBy('createdAt', 'desc')
+    );
+
+    return collectionData(q, { idField: 'id' }).pipe(
+      map((chats) => {
+        this.activeChats.next(chats as Chat[]);
+        return chats as Chat[];
+      })
+    );
   }
 
   // Get all chats including closed ones for history
@@ -122,6 +151,7 @@ export class ChatService {
     const chatsRef = collection(this.firestore, 'chats');
     const newChat = {
       participants: [userId, 'support'],
+      startedBy: this.auth.currentUser?.displayName,
       createdAt: serverTimestamp(),
       status: 'awaiting',
     };
@@ -253,5 +283,26 @@ export class ChatService {
       id: snapshot.docs[0].id,
       ...snapshot.docs[0].data(),
     } as Message;
+  }
+
+  // Get a single chat by ID
+  // async getChatById(chatId: string): Promise<Chat | null> {
+  //   const chatRef = doc(this.firestore, `chats/${chatId}`);
+  //   const chatDoc = await getDocs(
+  //     query(collection(this.firestore, 'chats'), where('id', '==', chatId))
+  //   );
+
+  //   if (chatDoc.empty) return null;
+
+  //   return {
+  //     id: chatDoc.docs[0].id,
+  //     ...chatDoc.docs[0].data(),
+  //   } as Chat;
+  // }
+
+  // get a single chat by ID
+  getChatById(chatId: string): Observable<Chat | null> {
+    const chatRef = doc(this.firestore, 'chats', chatId);
+    return docData(chatRef, { idField: 'id' }) as Observable<Chat | null>;
   }
 }

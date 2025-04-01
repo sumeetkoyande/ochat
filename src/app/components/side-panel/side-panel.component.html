@@ -3,10 +3,10 @@
         <h3>Users</h3>
             @if (authService.userRole === 'admin') {
                 <mat-list>
-                    <mat-list-item *ngFor="let user of users">
-                        <button mat-button class="user-button" (click)="navigate(user)">
-                            <span class="status-dot" [ngClass]="[user.chatViewed ? 'online' : 'offline']"></span>
-                            {{ user.displayName | titlecase }}
+                    <mat-list-item *ngFor="let chat of activeChats">
+                        <button mat-button class="user-button" (click)="openChat(chat.id)">
+                            <span class="status-dot" [ngClass]="[chat.status === 'active' ? 'online' : 'offline']"></span>
+                            {{ chat.startedBy | titlecase }}
                         </button>
                     </mat-list-item>
                 </mat-list>

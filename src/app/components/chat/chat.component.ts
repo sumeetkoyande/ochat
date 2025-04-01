@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,7 +7,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
-import { map, Observable, switchMap, take } from 'rxjs';
+import { map, Observable, of, switchMap, take } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ChatService } from '../../services/chat.service';
 import { UserService } from '../../services/user.service';
@@ -35,15 +35,15 @@ export class ChatComponent implements OnInit {
 
   // For admin view
   userChats$!: Observable<any[]>;
+  selectedChat: any = null;
 
   // For current chat
   messages$!: Observable<any[]>;
   unreadCount$!: Observable<number>;
   chatPartnerName$!: Observable<string>;
 
-  public auth = inject(AuthService);
-
   constructor(
+    public auth: AuthService,
     private chatService: ChatService,
     public userService: UserService
   ) {}
@@ -77,13 +77,14 @@ export class ChatComponent implements OnInit {
 
     // Get chat partner name (for admin)
     if (this.auth.userRole === 'admin') {
-      this.chatPartnerName$ = this.messages$.pipe(
-        switchMap((messages) => {
-          const partnerId = messages.find(
-            (m) => m.senderId !== this.userService.currentUser?.uid
-          )?.senderId;
-          return this.userService.getUserName(partnerId || '');
-        })
+      this.selectedChat = this.userChats$.pipe(
+        map((chats) => chats.find((chat) => chat.id === chatId))
+      );
+
+      this.chatPartnerName$ = this.selectedChat.pipe(
+        switchMap(
+          (chat) => this.userService.getUserName('') || of('Support User')
+        )
       );
     }
   }
@@ -105,7 +106,6 @@ export class ChatComponent implements OnInit {
   private async markMessagesAsRead(): Promise<void> {
     if (!this.currentChatId) return;
 
-    // Get unread messages
     const messages = await this.messages$.pipe(take(1)).toPromise();
     const unreadIds =
       messages
@@ -123,6 +123,7 @@ export class ChatComponent implements OnInit {
     if (this.currentChatId) {
       await this.chatService.closeChat(this.currentChatId);
       this.currentChatId = null;
+      this.selectedChat = null;
     }
   }
 
