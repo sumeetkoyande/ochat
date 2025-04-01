@@ -36,7 +36,7 @@ export class SidePanelComponent implements OnInit, OnDestroy {
 
   // inputs
   @Input() users: User[] = [];
-  selectedChat: Chat[] = [];
+  selectedChat: Chat | null = null;
   activeChats: Chat[] | null = null;
 
   constructor() {
@@ -60,16 +60,9 @@ export class SidePanelComponent implements OnInit, OnDestroy {
 
   openChat(chatId: string) {
     console.log(chatId);
-    this.chatService.getChatById(chatId).subscribe((chat) => {
-      if (!chat) return;
-
-      // Check if the chat already exists in selectedChat
-      const exists = this.selectedChat.some((s) => s.id === chat.id);
-
-      if (!exists) {
-        this.selectedChat.push(chat);
-      }
-    });
+    this.chatService
+      .getChatById(chatId)
+      .subscribe((chat) => (this.selectedChat = chat));
   }
 
   testFunction() {

@@ -7,7 +7,15 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatListModule } from '@angular/material/list';
-import { map, Observable, of, switchMap, take } from 'rxjs';
+import {
+  combineLatest,
+  from,
+  map,
+  Observable,
+  of,
+  switchMap,
+  take,
+} from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { ChatService } from '../../services/chat.service';
 import { UserService } from '../../services/user.service';
@@ -103,20 +111,25 @@ export class ChatComponent implements OnInit {
     }
   }
 
-  private async markMessagesAsRead(): Promise<void> {
-    if (!this.currentChatId) return;
+  private markMessagesAsRead(): Observable<void> {
+    return combineLatest([
+      of(this.currentChatId),
+      this.messages$.pipe(take(1)),
+    ]).pipe(
+      switchMap(([chatId, messages]) => {
+        if (!chatId) return of(undefined);
 
-    const messages = await this.messages$.pipe(take(1)).toPromise();
-    const unreadIds =
-      messages
-        ?.filter(
-          (m) => !m.read && m.senderId !== this.userService.currentUser?.uid
-        )
-        .map((m) => m.id) || [];
+        const unreadIds = messages
+          .filter(
+            (m) => !m.read && m.senderId !== this.userService.currentUser?.uid
+          )
+          .map((m) => m.id);
 
-    if (unreadIds.length) {
-      await this.chatService.markMessagesAsRead(this.currentChatId, unreadIds);
-    }
+        return unreadIds.length > 0
+          ? from(this.chatService.markMessagesAsRead(chatId, unreadIds))
+          : of(undefined);
+      })
+    );
   }
 
   async closeChat(): Promise<void> {
