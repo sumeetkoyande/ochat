@@ -59,19 +59,37 @@ export class SidePanelComponent implements OnInit, OnDestroy {
   }
 
   openChat(chatId: string) {
-    console.log(chatId);
-    // this.chatService
-    //   .getChatById(chatId)
-    //   .subscribe((chat) => (this.selectedChats = chat));
     this.chatService.getChatById(chatId).subscribe((chat) => {
       if (!chat) return;
 
       // Check if the chat already exists in selectedChat
-      const exists = this.selectedChats.some((s) => s.id === chat.id);
+      // const exists = this.selectedChats.some((s) => s.id === chat.id);
 
-      if (!exists) {
-        this.selectedChats.push(chat);
+      // if (!exists) {
+      //   this.selectedChats.push(chat);
+      // }
+      // Check if chat is already open
+      const existingIndex = this.selectedChats.findIndex(
+        (c) => c.id === chat.id
+      );
+      if (existingIndex >= 0) {
+        // Chat already open, bring it to front
+        this.selectedChats = [
+          ...this.selectedChats.slice(0, existingIndex),
+          ...this.selectedChats.slice(existingIndex + 1),
+          chat,
+        ];
+        return;
       }
+
+      // Enforce maximum of 2 chats
+      if (this.selectedChats.length >= 2) {
+        // Remove the oldest chat (first in array)
+        this.selectedChats.shift();
+      }
+
+      // Add the new chat
+      this.selectedChats.push(chat);
     });
   }
 
