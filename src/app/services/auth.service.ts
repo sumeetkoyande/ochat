@@ -12,12 +12,19 @@ import {
 import {
   doc,
   Firestore,
+  getDoc,
   serverTimestamp,
   setDoc,
 } from '@angular/fire/firestore';
 import { Router } from '@angular/router';
-import { catchError, from, Observable, Subscription, switchMap } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
+interface userInfo {
+  uid: string;
+  displayName: string;
+  email: string;
+  role: string;
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -26,6 +33,7 @@ export class AuthService {
   authStateSubscription: Subscription;
   user: User | null = null;
   userRole: string | null = null;
+  userInfo: userInfo | null = null;
 
   // injectors
   private firestore: Firestore = inject(Firestore);
@@ -33,8 +41,11 @@ export class AuthService {
   constructor(private auth: Auth, private router: Router) {
     this.authState$ = authState(this.auth);
     this.authStateSubscription = this.authState$.subscribe(
-      (firebaseUser: User | null) => {
+      async (firebaseUser: User | null) => {
         this.user = firebaseUser;
+        if (firebaseUser) {
+          await this.fetchUserInfo(firebaseUser.uid);
+        }
       }
     );
     auth.onAuthStateChanged(async (user) => {
@@ -44,6 +55,23 @@ export class AuthService {
         this.userRole = role as string;
       }
     });
+  }
+
+  private async fetchUserInfo(uid: string): Promise<void> {
+    try {
+      const userDocRef = doc(this.firestore, `users/${uid}`);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        this.userInfo = userDocSnap.data() as userInfo;
+      } else {
+        console.warn('User document not found in Firestore');
+        this.userInfo = null;
+      }
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+      this.userInfo = null;
+    }
   }
 
   async loginWithEmailAndPassword(email: string, password: string) {
@@ -57,35 +85,51 @@ export class AuthService {
     }
   }
 
-  signUp(email: string, password: string, displayName: string) {
-    return from(
-      createUserWithEmailAndPassword(this.auth, email, password)
-    ).pipe(
-      switchMap(({ user }) => {
-        if (!user) {
-          throw new Error('User creation failed');
-        }
+  async signUp(email: string, password: string, displayName: string) {
+    try {
+      // Create user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(
+        this.auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
 
-        const userDocRef = doc(this.firestore, `users/${user.uid}`);
-        return from(
-          setDoc(userDocRef, {
-            uid: user.uid,
-            email: user.email,
-            displayName: displayName,
-            createdAt: serverTimestamp(), // Better to use server timestamp
-            lastLogin: serverTimestamp(),
-          })
-        );
-      }),
-      catchError((error) => {
-        console.error('Signup error:', error);
-        // Optionally delete the user if Firestore fails
-        if (this.auth.currentUser) {
-          this.auth.currentUser.delete();
+      if (!user) {
+        throw new Error('User creation failed');
+      }
+
+      // Create user document in Firestore
+      const userDocRef = doc(this.firestore, `users/${user.uid}`);
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        email: user.email,
+        role: 'admin',
+        displayName: displayName,
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
+      });
+
+      console.log('User created successfully in both Auth and Firestore');
+      return user;
+    } catch (error) {
+      console.error('Signup error:', error);
+
+      // Clean up: Delete the auth user if Firestore failed
+      if (this.auth.currentUser) {
+        try {
+          await this.auth.currentUser.delete();
+          console.log('Rolled back auth user due to Firestore failure');
+        } catch (deleteError) {
+          console.error(
+            'Failed to delete auth user during rollback:',
+            deleteError
+          );
         }
-        throw error; // Re-throw to let caller handle it
-      })
-    );
+      }
+
+      throw error;
+    }
   }
 
   logout() {

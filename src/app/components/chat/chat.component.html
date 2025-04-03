@@ -3,7 +3,7 @@
     <mat-card class="chat-window" [class.expanded]="expanded">
         <mat-card-header (click)="toggleExpand()" class="chat-header">
             <mat-card-title>
-                {{ auth.userRole === 'admin' ? (openChat?.startedBy || 'User') : 'Support Team' }}
+                {{ authService.userInfo?.displayName === 'admin' ? (openChat?.startedBy || 'User') : 'Support Team' }}
             </mat-card-title>
 
             <mat-card-subtitle *ngIf="!expanded && (unreadCount$ | async) as unreadCount" [matBadge]="unreadCount"
@@ -52,7 +52,7 @@
 <!-- Main Container -->
 <div class="chat-manager-container">
     <div class="chat-windows-container">
-        @if(auth.userRole === 'admin') {
+        @if(authService.userInfo?.role === 'admin') {
         <!-- Admin view - shows multiple chat windows -->
         @for (chat of allOpenChat; track chat.id) {
         <div class="chat-window-wrapper">

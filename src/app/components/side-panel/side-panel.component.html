@@ -1,7 +1,7 @@
 <mat-sidenav-container class="sidenav-container">
     <mat-sidenav mode="side" opened class="sidenav">
         <h3>Users</h3>
-            @if (authService.userRole === 'admin') {
+            @if (authService.userInfo?.role === 'admin') {
                 <mat-list>
                     <mat-list-item *ngFor="let chat of activeChats">
                         <button mat-button class="user-button" (click)="openChat(chat.id)">
@@ -18,7 +18,7 @@
     </mat-sidenav>
     <mat-sidenav-content class="sidenav-content">
         <router-outlet></router-outlet>
-        @if (authService.userRole === 'admin') {
+        @if (authService.userInfo?.role === 'admin') {
             @for (selectedChat of selectedChats; track selectedChat.id) {
             <chat [openChat]="selectedChat" [allOpenChat]="selectedChats"></chat>
             }

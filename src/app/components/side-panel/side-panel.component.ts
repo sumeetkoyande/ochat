@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -35,39 +35,23 @@ export class SidePanelComponent implements OnInit, OnDestroy {
   chatService = inject(ChatService);
 
   // inputs
-  @Input() users: User[] = [];
+  // @Input() users: User[] = [];
   selectedChats: Chat[] = [];
   activeChats: Chat[] | null = null;
 
-  constructor() {
-    this.dataService.users$.subscribe((user) => {
-      user.forEach((u) => {
-        this.users.push(u);
-      });
-    });
-  }
+  constructor() {}
 
   ngOnInit() {
     this.chatService.getAdminActiveChats().subscribe((chats) => {
+      console.log('active chats', chats);
       this.activeChats = chats;
     });
-  }
-
-  navigate(chatId: string) {
-    console.log('from navigate method', chatId);
-    // this.router.navigate(['/dashboard']);
   }
 
   openChat(chatId: string) {
     this.chatService.getChatById(chatId).subscribe((chat) => {
       if (!chat) return;
-
-      // Check if the chat already exists in selectedChat
-      // const exists = this.selectedChats.some((s) => s.id === chat.id);
-
-      // if (!exists) {
-      //   this.selectedChats.push(chat);
-      // }
+      console.log(chat);
       // Check if chat is already open
       const existingIndex = this.selectedChats.findIndex(
         (c) => c.id === chat.id

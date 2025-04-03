@@ -64,13 +64,13 @@ export class ChatComponent implements OnInit, OnChanges {
   @Input() allOpenChat: Chat[] = [];
 
   constructor(
-    public auth: AuthService,
+    public authService: AuthService,
     private chatService: ChatService,
     public userService: UserService
   ) {}
 
   async ngOnInit(): Promise<void> {
-    if (this.auth.userRole === 'admin') {
+    if (this.authService.userInfo?.role === 'admin') {
       this.userChats$ = this.chatService.getAllUserChats().pipe(
         map((chats) =>
           chats.map((chat) => ({
@@ -104,7 +104,7 @@ export class ChatComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['allOpenChat'] && this.auth.userRole === 'admin') {
+    if (changes['allOpenChat'] && this.authService.userInfo?.role === 'admin') {
       // Initialize or update all chat windows
       this.allOpenChat.forEach((chat) => {
         if (!this.messages[chat.id]) {
@@ -133,7 +133,7 @@ export class ChatComponent implements OnInit, OnChanges {
   }
 
   toggleExpand(chatId?: string): void {
-    if (this.auth.userRole === 'admin' && chatId) {
+    if (this.authService.userInfo?.role === 'admin' && chatId) {
       this.expandedChats[chatId] = !this.expandedChats[chatId];
       if (this.expandedChats[chatId]) {
         this.markMessagesAsRead(chatId).subscribe();
@@ -167,7 +167,7 @@ export class ChatComponent implements OnInit, OnChanges {
 
   private markMessagesAsRead(chatId: string): Observable<void> {
     const messages$ =
-      this.auth.userRole === 'admin'
+      this.authService.userInfo?.role === 'admin'
         ? this.messages[chatId].pipe(take(1))
         : this.messages$.pipe(take(1));
 
@@ -192,7 +192,7 @@ export class ChatComponent implements OnInit, OnChanges {
 
     await this.chatService.closeChat(targetChatId);
 
-    if (this.auth.userRole === 'admin' && chatId) {
+    if (this.authService.userInfo?.role === 'admin' && chatId) {
       // Remove from local state
       delete this.messages[chatId];
       delete this.unreadCounts[chatId];

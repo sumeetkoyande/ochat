@@ -18,6 +18,7 @@ import {
   writeBatch,
 } from '@angular/fire/firestore';
 import { BehaviorSubject, Observable, map, of, switchMap } from 'rxjs';
+import { AuthService } from './auth.service';
 
 export interface Chat {
   id: string;
@@ -50,33 +51,14 @@ export class ChatService {
   private currentUserId: string | null = null;
   private readonly MESSAGE_LIMIT = 50;
 
-  constructor(private firestore: Firestore, private auth: Auth) {
+  constructor(
+    private firestore: Firestore,
+    private auth: Auth,
+    private authService: AuthService
+  ) {
     this.auth.onAuthStateChanged((user) => {
       this.currentUserId = user?.uid || null;
     });
-  }
-
-  // Get observable of active chats
-  // getActiveChats$(): Observable<Chat[]> {
-  //   return this.activeChats.asObservable();
-  // }
-
-  // Load all active chats (for admin)
-  private async loadActiveChats(): Promise<void> {
-    const chatsRef = collection(this.firestore, 'chats');
-    const q = query(
-      chatsRef,
-      where('status', 'in', ['active', 'awaiting']),
-      orderBy('createdAt', 'desc')
-    );
-
-    const querySnapshot = await getDocs(q);
-    const chats = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as Chat[];
-
-    this.activeChats.next(chats);
   }
 
   // Get active chats for admin
@@ -151,7 +133,7 @@ export class ChatService {
     const chatsRef = collection(this.firestore, 'chats');
     const newChat = {
       participants: [userId, 'support'],
-      startedBy: this.auth.currentUser?.displayName,
+      startedBy: this.authService.userInfo?.displayName,
       createdAt: serverTimestamp(),
       status: 'awaiting',
     };
@@ -255,21 +237,6 @@ export class ChatService {
       closedAt: serverTimestamp(),
     });
   }
-
-  // Get unread message count for a chat
-  // async getUnreadCount(chatId: string): Promise<number> {
-  //   if (!this.currentUserId) return 0;
-
-  //   const messagesRef = collection(this.firestore, `chats/${chatId}/messages`);
-  //   const q = query(
-  //     messagesRef,
-  //     where('read', '==', false),
-  //     where('senderId', '!=', this.currentUserId)
-  //   );
-
-  //   const snapshot = await getDocs(q);
-  //   return snapshot.size;
-  // }
 
   getUnreadCount(chatId: string): Observable<number> {
     return user(this.auth).pipe(

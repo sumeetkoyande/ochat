@@ -21,7 +21,7 @@ import { AuthService } from '../../services/auth.service';
 export class TopNavComponent {
   auth = inject(AuthService);
 
-  userName = this.auth.user?.displayName || ''; // Replace with actual user name from your auth service
+  userName = this.auth.userInfo?.displayName || ''; // Replace with actual user name from your auth service
   userInitials = this.getInitials(this.userName);
   userEmail = this.auth.user?.email; // Replace with actual user email
 
